@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aerocom_user_management"
+version = "0.1.0"
+description = "small project for ansible based user management of aerocom-users.met.no"
+authors = [
+    { name = "Jan Griesfeller", email = "jan.griesfeller@met.no" }
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "GPL 3.0" }
+
+[project.urls]
+homepage = "https://github.com/metno/aerocom_user_management"
+repository = "https://github.com/metno/aerocom_user_management"
+
+[project.scripts]
+aumn_manage_user = "aerocom_user_management.cli.aumn_manage_user:main"
+
+[tool.setuptools]
+packages = ["aerocom_user_management"]
+package-dir = {"" = "src"}
+
+#[tool.setuptools.packages.find]
+#where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311', 'py312', 'py313']
+
+[tool.isort]
+profile = "black"
