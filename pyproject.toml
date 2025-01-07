@@ -24,11 +24,11 @@ aumn_manage_user = "aerocom_user_management.cli.aumn_manage_user:main"
 packages = ["aerocom_user_management"]
 package-dir = {"" = "src"}
 
-[tool.setuptools.packages.find]
-where = ["src"]
+#[tool.setuptools.packages.find]
+#where = ["src"]
 
 [tool.setuptools.package-data]
-mypkg = ["*.yml",]
+aerocom_user_management = ["*.yml",]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
