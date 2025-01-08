@@ -72,8 +72,12 @@ USERS_INTERNAL_PROTO = """---
     - name: set xfs quota
       ansible.builtin.shell:
         cmd: xfs_quota -x -c 'limit bsoft=10G bhard=15G PROTO_USER' /home_ext
+"""
 
-
-
-
+KEY_PROTO = """
+- name: add_key PROTO_USER
+  ansible.posix.authorized_key:
+    user: PROTO_USER
+    state: present
+    key: PROTO_KEY
 """
