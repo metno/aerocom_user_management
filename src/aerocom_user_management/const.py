@@ -14,7 +14,7 @@ USER_EXTERNAL_PROTO = """
         shell: /usr/bin/bash
         create_home: yes
         home: /home_ext/PROTO_USER
-        umask: 0002
+        umask: "0002"
         # needs to be in seconds from the epoch
         # to get a number 2 years from now use `date --date='2 years' +%s`
         # the chage command has an easier UI:
@@ -57,7 +57,7 @@ USERS_INTERNAL_PROTO = """---
         shell: /usr/bin/bash
         create_home: yes
         home: /home_ext/PROTO_USER
-        umask: 0002
+        umask: "0002"
     - name: add_key PROTO_USER
       ansible.posix.authorized_key:
         user: PROTO_USER
