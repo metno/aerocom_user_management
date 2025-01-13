@@ -1,5 +1,6 @@
 import argparse
 import sys
+import re
 
 import yaml
 from aerocom_user_management import const
@@ -105,6 +106,19 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
         options["key"] = args.key
         options["outfile"] = args.outfile
         options["email"] = args.email
+        if options["email"] is not None:
+            email_valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', options["email"])
+            if not email_valid:
+                print(f"Invalid email {args.email}. Exiting...")
+                exit(1)
+        else:
+            # username has to be an email address
+            email_valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', options["username"])
+            if not email_valid:
+                print(f"Error: No -email option given and user name {options['username']} is not an email address.")
+                print("Please use a valid email address as username or provide an email address using the -email option.")
+                print("Exiting now.")
+                exit(1)
 
         try:
             options["expires"] = dt.datetime.strptime(args.expires, "%Y-%m-%d").timestamp()
@@ -123,7 +137,7 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
             print(f"Error: either -key or -keyfile have to be provided.")
             sys.exit(1)
 
-        yaml_key_str = yaml.safe_load(const.KEY_PROTO)
+
         if int(options["uid"]) > 60000:
             yaml_str = yaml.safe_load(const.USER_EXTERNAL_PROTO)
         else:
@@ -161,6 +175,8 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
         assert "the end"
     else:
         # addkey sub command
+        yaml_key_str = yaml.safe_load(const.KEY_PROTO)
+
         pass
 
 
