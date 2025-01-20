@@ -1,20 +1,28 @@
-# aerocom user management
+# Aerocom user management
 small project for ansible based user management of aerocom-users.met.no
 
-This repo is useless without actual access to the Met Norway ostack2 infrastructure
+**This repo is useless without actual access to the Met Norway ostack2 infrastructure, 
+write access to the ostack2 API and a working ansible installation.**
 
-# documentation
-## usage prerequest
-This tool is meant to provide an easy way to create user yaml files for the creation of 
-users for the aerocom's project external user server aerocom-users.met.no.
+# Documentation
+## Synopsis
+The command line tool `aumn_manage_user` (**aum** from **a**erocom-**u**sers.**m**et.**n**o) is 
+provided to generate 
+`.yaml` files to be used with ansible to create users and to add additional keys to their 
+`~/.ssh/suthorized_keys` file.
+For user creation the subcommand `adduser` is provided, for key adding the subcommand `addkey`.
+
 The actual user creation is done using ansible and the 
-[ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository.
+[ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository 
+(on gitlab.met.no; only accessible from within the Met Norway network) .
 
-**Without a working ansible installation and write access to the ostack2 API for the
-repository above, this tools is not usable.**
+Accounts created have a standard expiry time 2 years from the time of creation of the `.yaml` file.
+
+**Note:**
+Expiry dates can be set using the standard `chage` command.
 
 ## Usage
-There's the command `aumn_manage_user` in the repository:
+This repo provides the command line tool `aumn_manage_user`.
 ```bash
 usage: aumn_manage_user [-h] {adduser,addkey} ...
 
@@ -30,8 +38,8 @@ options:
 
 ```
 There's two sub commands:
-- adduser (to add new users)
-- addkey (to add another public key to an existing user)
+- `adduser` (to add new users)
+- `addkey` (to add another public key to an existing user)
 
 ### aumn_manage_user adduser
 ```
@@ -58,3 +66,11 @@ usage: aumn_manage_user addkey [-h]
 options:
   -h, --help  show this help message and exit
 ```
+
+### output files
+To make things easier, the environment variable `OSTACK_SETUP_FOU_KL_PATH` can be set to 
+tell where the [ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository 
+is located on the user's file system. If that environment variable is set, the output files will be 
+put at the right place within the ostack-setup-fou-kl repo 
+(at `aerocom/files/aerocom-users_users/external` for external users and 
+`aerocom/files/aerocom-users_users/internal` for internal users)
