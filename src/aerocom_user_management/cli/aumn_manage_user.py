@@ -1,6 +1,7 @@
 import argparse
 import sys
 import re
+import os
 
 import yaml
 from aerocom_user_management import const
@@ -9,7 +10,6 @@ from pathlib import Path
 
 
 def main():
-    # Create the parser
     # define some terminal colors to be used in the help
     colors = {
         "BOLD": "\033[1m",
@@ -23,6 +23,12 @@ def main():
         "YELLOW": "\033[93m",
         "RED": "\033[91m",
     }
+    # set default output path
+    try:
+        default_output_path=os.environ["OSTACK_SETUP_FOU_KL_PATH"]
+    except KeyError:
+        default_output_path=None
+    # Create the parser
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         prog="aumn_manage_user",
@@ -60,7 +66,7 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
         "-key", type=str, help="ssh key to use. QUOTE CORRECTLY! or use keyfile option"
     )
     parser_adduser.add_argument("-keyfile", type=str, help="keyfile to use. one key per line.")
-    parser_adduser.add_argument("-outfile", type=str, help="outputfile. Defaults to stdout.")
+    parser_adduser.add_argument("-outfile", type=str, help="outputfile. Defaults to stdout.");
     parser_adduser.add_argument(
         "-email",
         type=str,
