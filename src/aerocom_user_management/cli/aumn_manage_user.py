@@ -34,18 +34,31 @@ def main():
         prog="aumn_manage_user",
         description="aerocom-users.met.no user management script.",
         epilog=f"""{colors['BOLD']}Example usages:{colors['END']}\n
-{colors['UNDERLINE']}- basic usage:{colors['END']}
-aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
+{colors['UNDERLINE']}- print resulting yaml file to stdout:{colors['END']}
+aumn_manage_user adduser jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
 
+{colors['UNDERLINE']}- create yaml file:{colors['END']}
+aumn_manage_user adduser jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub -outfile jang.yaml
 
+IMPORTANT: THIS SCRIPT WILL ONLY CREATE A yaml FILE to be used together with the 
+fou-kl ostack setup gitlab repository here: 
+https://gitlab.met.no/emep/ostack-setup-fou-kl/-/blob/master/aerocom/README.md?ref_type=heads
+
+Please look there on how to use the resulting yaml file.
     """,
     )
     subparsers = parser.add_subparsers(help='subcommands help')
     parser_adduser = subparsers.add_parser('adduser', help='adduser help')
     parser_addkey = subparsers.add_parser('addkey', help='addkey help')
 
+    # add arguments for addkey
+    parser_addkey.add_argument("infile",type=str, help="inputfile to add a new public key to.")
+    parser_addkey.add_argument("-outfile",type=str, help="outputfile. Defaults to stdout.")
+    parser_addkey.add_argument("-keyfile",type=str, help="keyfile to add to input yaml file.")
+    parser_addkey.add_argument("-key",type=str, help="key to add to input yaml file.QUOTE CORRECTLY! or use keyfile option.")
 
-    # Add arguments
+
+    # Add arguments adduser
     parser_adduser.add_argument(
         "username",
         type=str,
@@ -86,7 +99,7 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
 
     # Because we have sub parsers, only the attributes from the supplied sub parser
     # are part of args
-    if "name" in args:
+    if sys.argv[1] == "adduser":
         # adduser sub command
         # positional arguments
         options["name"] = " ".join(args.name)
@@ -179,11 +192,46 @@ aumn_manage_user jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
                 f.writelines(yaml.dump(proto_yaml))
             print(f"wrote file {options['outfile']}.")
         assert "the end"
-    else:
-        # addkey sub command
+    elif sys.argv[1] == "addkey":
+        # add key to yaml file
+
+        options["infile"] = args.infile
+        options["outfile"] = args.outfile
+
+        try:
+            options["keyfile"] = Path(args.keyfile)
+            options["keys"] = []
+            with open(options["keyfile"], "r") as f:
+                options["keys"].append(f.read().strip())
+        except FileNotFoundError as e:
+            print(e)
+            sys.exit(3)
+        except:
+            print(f"Invalid keyfile {args.keyfile}.")
+            sys.exit(5)
+
+        options["key"] = args.key
+
+        # logical checks
+        # eiter options['keyfile'] or options['key'] need to exist
+        if args.key is None and not "keyfile" in options:
+            print(f"Error: either -key or -keyfile have to be provided.")
+            sys.exit(1)
+
+        # read input yaml file
+        with open(options["infile"], "r") as f:
+            yaml_dict = yaml.safe_load(f)
+
+        # prepare con
+        for idx in yaml_dict:
+            yaml_dict[idx]["tasks"].append(options["key"])
+        assert("inpyt yaml read")
+
         yaml_key_str = yaml.safe_load(const.KEY_PROTO)
 
         pass
+    else:
+        print(f"Unknown subcommand {sys.argv[1]}. Only 'adduser' and 'addkey' are supported.")
 
 
 if __name__ == "__main__":
