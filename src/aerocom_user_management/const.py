@@ -37,7 +37,7 @@ USER_EXTERNAL_PROTO = """
     - name: set main group PROTO_USER to aerocomftp keeping the previously created user specific group
       ansible.builtin.user:
         user: PROTO_USER
-        group: aerocomftp,
+        group: aerocomftp
         groups: PROTO_USER,users
 """
 

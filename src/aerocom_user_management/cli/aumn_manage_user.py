@@ -7,6 +7,7 @@ import yaml
 from aerocom_user_management import const
 import datetime as dt
 from pathlib import Path
+from dateutil.relativedelta import relativedelta
 
 
 def main():
@@ -114,13 +115,18 @@ Please look there on how to use the resulting yaml file.
             options["keyfile"] = Path(args.keyfile)
             options["keys"] = []
             with open(options["keyfile"], "r") as f:
-                options["keys"].append(f.read().strip())
+                options["keys"] = f.readlines()
         except FileNotFoundError as e:
             print(e)
             sys.exit(3)
         except:
-            print(f"Invalid keyfile {args.keyfile}.")
-            sys.exit(5)
+            if args.key is None and not "keyfile" in options:
+                print(f"Error: either -key or -keyfile have to be provided.")
+                sys.exit(1)
+            else:
+                print(f"Invalid keyfile {args.keyfile}.")
+                sys.exit(5)
+
 
         options["key"] = args.key
         options["outfile"] = args.outfile
@@ -147,50 +153,35 @@ Please look there on how to use the resulting yaml file.
             )
             sys.exit(2)
         except (AttributeError, TypeError):
-            options["expires"] = dt.datetime.now().timestamp()
+            enddate = dt.datetime.now() + relativedelta(years=2)
+            options["expires"] = enddate.timestamp()
         options["expires"] = f"{int(options['expires'])}"
 
-        # logical checks
-        # eiter options['keyfile'] or options['key'] need to exist
-        if args.key is None and not "keyfile" in options:
-            print(f"Error: either -key or -keyfile have to be provided.")
-            sys.exit(1)
-
-
         if int(options["uid"]) > 60000:
-            yaml_str = yaml.safe_load(const.USER_EXTERNAL_PROTO)
+            yaml_str = const.USER_EXTERNAL_PROTO
         else:
-            # do the replacing keyword by keyword for readability
-            yaml_str = const.USERS_INTERNAL_PROTO.replace("PROTO_USER", options["username"])
-            yaml_str = yaml_str.replace("PROTO_NAME", options["name"])
-            # if the user's email address was privided use that, if not assume that the username is a valid email address
-            if "email" in options and options["email"] is not None:
-                yaml_str = yaml_str.replace("PROTO_EMAIL", options["email"])
-            else:
-                yaml_str = yaml_str.replace("PROTO_EMAIL", options["username"])
-            yaml_str = yaml_str.replace("PROTO_UID", options["uid"])
-            yaml_str = yaml_str.replace("PROTO_EXPIRES", options["expires"])
+            yaml_str = const.USERS_INTERNAL_PROTO
 
-            if options["key"] is not None:
-                # use command line provided key
-                yaml_str = yaml_str.replace("PROTO_KEY", options["key"])
-            else:
-                # set in all keys in the keyfile
-                for k_no, key in enumerate(options["keys"]):
-                    if k_no == 0:
-                        yaml_str = yaml_str.replace("PROTO_KEY", key)
-                    else:
-                        print("several keys in key file not implemented yet!")
-
-                # yaml_str = yaml_str.replace("", options[""])
+        yaml_str = replace_yaml_str(yaml_str, options)
 
         proto_yaml = yaml.safe_load(yaml_str)
+        # now add potential additional keys
+        if len(options["keys"]) > 1:
+            for k_no, key in enumerate(options["keys"]):
+                if k_no == 0:
+                    continue    # done already
+                else:
+                    yaml_str = replace_key_yaml_str(const.KEY_PROTO, options["username"], key)
+                    yaml_tmp = yaml.safe_load(yaml_str)
+                    proto_yaml[0]["tasks"].append(yaml_tmp[0])
+
         if options["outfile"] is None:
             print(yaml.dump(proto_yaml))
         else:
             with open(options["outfile"], "w") as f:
                 f.writelines(yaml.dump(proto_yaml))
             print(f"wrote file {options['outfile']}.")
+            print(f"In a perfect world you can run 'ansible-playbook {options['outfile']}' now.")
         assert "the end"
     elif sys.argv[1] == "addkey":
         # add key to yaml file
@@ -233,6 +224,40 @@ Please look there on how to use the resulting yaml file.
     else:
         print(f"Unknown subcommand {sys.argv[1]}. Only 'adduser' and 'addkey' are supported.")
 
+def replace_key_yaml_str(yaml_str, username, key):
+    """small helper method to replace key yaml string"""
+    yaml_str = yaml_str.replace("PROTO_KEY", key).replace("PROTO_USER", username)
+    return yaml_str
+
+
+def replace_yaml_str(yaml_str, options):
+    """adjust the yaml protypes to rge real needed yaml"""
+    pass
+    yaml_str = yaml_str.replace("PROTO_USER", options["username"])
+    # do the replacing keyword by keyword for readability
+    yaml_str = yaml_str.replace("PROTO_NAME", options["name"])
+    # if the user's email address was privided use that, if not assume that the username is a valid email address
+    if "email" in options and options["email"] is not None:
+        yaml_str = yaml_str.replace("PROTO_EMAIL", options["email"])
+    else:
+        yaml_str = yaml_str.replace("PROTO_EMAIL", options["username"])
+    yaml_str = yaml_str.replace("PROTO_UID", options["uid"])
+    yaml_str = yaml_str.replace("PROTO_EXPIRES", options["expires"])
+
+    if options["key"] is not None:
+        # use command line provided key
+        yaml_str = yaml_str.replace("PROTO_KEY", options["key"])
+    else:
+        yaml_str = yaml_str.replace("PROTO_KEY", options["keys"][0])
+        # set in all keys in the keyfile
+        # for k_no, key in enumerate(options["keys"]):
+        #     if k_no == 0:
+        #         yaml_str = yaml_str.replace("PROTO_KEY", key)
+        #     else:
+        #         print("several keys in key file not implemented yet!")
+
+        # yaml_str = yaml_str.replace("", options[""])
+    return yaml_str
 
 if __name__ == "__main__":
     main()

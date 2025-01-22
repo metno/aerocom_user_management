@@ -1,13 +1,17 @@
 import argparse
+import subprocess
 import sys
 import re
 import os
+from sys import stderr
+import tarfile
 
 import yaml
 from aerocom_user_management import const
 import datetime as dt
 from pathlib import Path
 
+TARDIR = Path("/home/jang/tmp/aumn_management/")
 
 def main():
     # define some terminal colors to be used in the help
@@ -88,10 +92,19 @@ aumn_import_user <user mapping file> <user file>
             home_dirs[username] = homedir
 
     for homedir in home_dirs:
+        stdout = subprocess.STDOUT
+        stderr = subprocess.PIPE
         if homedir in uids:
+            auth_file = TARDIR / Path(homedir) / ".ssh" / "authorized_keys"
+            # read authorized_keys file
+            if auth_file.exists():
+                with open(auth_file, "r") as auth_file_handle:
+                    auth_keys = auth_file_handle.readlines()
+
             call_arr = []
-            call_arr.extend('aumn_manage_user', 'adduser',  uids[homedir])
-    assert home_dirs
+            call_arr.extend(['aumn_manage_user', 'adduser',  homedir, uids[homedir], homedir, "-keyfile", str(auth_file)])
+            retcode = subprocess.run(call_arr, stdout=stdout, stderr=stderr, check=True)
+            assert home_dirs
 
 
 
