@@ -63,7 +63,7 @@ aumn_import_user <user mapping file> <user file>
         type=Path,
         help="user file",
     )
-    # parser.add_argument('', type=str, help='')
+    parser.add_argument('-o', '--outdir', type=Path, help='output directory. Defaults to stdout')
 
     # Parse the arguments
     args = parser.parse_args()
@@ -71,6 +71,10 @@ aumn_import_user <user mapping file> <user file>
     options = {}
     options["usermapfile"] = args.usermapfile
     options["userfile"] = args.userfile
+    options["outdir"] = args.outdir
+    if options["outdir"] is not None and not options["outdir"].exists():
+        print(f"Error: output directory {options['outdir']} does not exist.")
+        sys.exit(1)
 
     # to get the uid for a given username
     uids = {}
@@ -91,20 +95,36 @@ aumn_import_user <user mapping file> <user file>
             homedir = split_arr[-1].replace("/","")
             home_dirs[username] = homedir
 
-    for homedir in home_dirs:
+    for homedir in sorted(home_dirs):
         stdout = subprocess.STDOUT
         stderr = subprocess.PIPE
+        if len(homedir) > 32:
+            print(f"Error: user name {homedir }is longer than 32 characters. Skipping...")
+            continue
         if homedir in uids:
             auth_file = TARDIR / Path(homedir) / ".ssh" / "authorized_keys"
             # read authorized_keys file
-            if auth_file.exists():
-                with open(auth_file, "r") as auth_file_handle:
-                    auth_keys = auth_file_handle.readlines()
+            if not auth_file.exists():
+                print(f"Error: given keyfile does not exist {auth_file}.")
+                sys.exit(1)
 
             call_arr = []
+            # this puts the resultimg yaml file to stdout...
             call_arr.extend(['aumn_manage_user', 'adduser',  homedir, uids[homedir], homedir, "-keyfile", str(auth_file)])
-            retcode = subprocess.run(call_arr, stdout=stdout, stderr=stderr, check=True)
-            assert home_dirs
+            if int(uids[homedir]) < 60000:
+                file_add = "internal"
+                email = f"{homedir}@met.no"
+                call_arr.extend(["-email", email])
+            else:
+                file_add = "external"
+
+            if options["outdir"] is not None:
+                out_file = options["outdir"] / f"{homedir}_{file_add}.yaml"
+                call_arr.extend(["-outfile", str(out_file)])
+
+            # retcode = subprocess.run(call_arr, stdout=stdout, stderr=stderr, check=True)
+            retcode = subprocess.run(call_arr, check=True)
+            assert retcode
 
 
 
