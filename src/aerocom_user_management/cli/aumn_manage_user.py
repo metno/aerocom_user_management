@@ -109,6 +109,9 @@ Please look there on how to use the resulting yaml file.
         # positional arguments
         options["name"] = " ".join(args.name)
         options["username"] = args.username
+        if len(options["username"]) > 32:
+            print(f"Error: username {options['username']} is longer than 32 characters. Exiting here...")
+            sys.exit(4)
         # optional arguments
         options["uid"] = args.uid
         if options["uid"] is not None:
