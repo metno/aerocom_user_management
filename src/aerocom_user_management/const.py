@@ -9,7 +9,7 @@ USER_EXTERNAL_PROTO = """
       ansible.builtin.user:
         user: PROTO_USER
         comment: PROTO_NAME,,,PROTO_EMAIL
-        uid: PROTO_UID
+        # uid: PROTO_UID
         groups: aerocomftp
         shell: /usr/bin/bash
         create_home: yes
@@ -52,7 +52,7 @@ USERS_INTERNAL_PROTO = """---
       ansible.builtin.user:
         user: PROTO_USER
         comment: PROTO_NAME
-        uid: PROTO_UID
+        # uid: PROTO_UID
         groups: sudo,admin,aerocom,aerocomftp,users
         shell: /usr/bin/bash
         create_home: yes

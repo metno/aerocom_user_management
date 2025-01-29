@@ -30,6 +30,7 @@ def main():
     except KeyError:
         default_output_path=None
     # Create the parser
+    # main_parser = argparse.ArgumentParser(add_help=False)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         prog="aumn_manage_user",
@@ -66,7 +67,7 @@ Please look there on how to use the resulting yaml file.
         help="UNIX user name to use",
     )
     parser_adduser.add_argument(
-        "uid",
+        "-uid",
         type=str,
         help="user id (uid) to use",
     )
@@ -77,10 +78,11 @@ Please look there on how to use the resulting yaml file.
         nargs="+",
     )
     parser_adduser.add_argument(
-        "-key", type=str, help="ssh key to use. QUOTE CORRECTLY! or use keyfile option"
+        "-key", type=str, help="ssh key to use. QUOTE CORRECTLY! or use keyfile option",
+        nargs="+",
     )
-    parser_adduser.add_argument("-keyfile", type=str, help="keyfile to use. one key per line.")
-    parser_adduser.add_argument("-outfile", type=str, help="outputfile. Defaults to stdout.");
+    parser_adduser.add_argument("-keyfile", type=Path, help="keyfile to use. one key per line.")
+    parser_adduser.add_argument("-outfile", type=Path, help="outputfile. Defaults to stdout.");
     parser_adduser.add_argument(
         "-email",
         type=str,
@@ -91,6 +93,8 @@ Please look there on how to use the resulting yaml file.
         type=str,
         help="user name's expiring date as YYYY-MM-DD. Defaults to today + 2 years.",
     )
+    parser_adduser.add_argument('-i', '--internal', action="store_true",
+                                help='create an internal user (will get sudo rights).')
     # parser.add_argument('', type=str, help='')
 
     # Parse the arguments
@@ -105,31 +109,38 @@ Please look there on how to use the resulting yaml file.
         # positional arguments
         options["name"] = " ".join(args.name)
         options["username"] = args.username
-        options["uid"] = args.uid
-        if not options["uid"].isdigit():
-            print("UID must be an integer.")
-            sys.exit(4)
-
         # optional arguments
+        options["uid"] = args.uid
+        if options["uid"] is not None:
+            if not options["uid"].isdigit():
+                print("UID must be an integer.")
+                sys.exit(4)
+
+        # not properly quoted the key argument can be a list
         try:
-            options["keyfile"] = Path(args.keyfile)
-            options["keys"] = []
-            with open(options["keyfile"], "r") as f:
-                options["keys"] = f.readlines()
-        except FileNotFoundError as e:
-            print(e)
-            sys.exit(3)
+            options["key"] = " ".join(args.key)
         except:
-            if args.key is None and not "keyfile" in options:
-                print(f"Error: either -key or -keyfile have to be provided.")
-                sys.exit(1)
-            else:
-                print(f"Invalid keyfile {args.keyfile}.")
-                sys.exit(5)
-
-
-        options["key"] = args.key
+            options["key"] = args.key
         options["outfile"] = args.outfile
+        options["internal"] = args.internal
+        if options["key"] is None:
+            try:
+                options["keyfile"] = Path(args.keyfile)
+                options["keys"] = []
+                with open(options["keyfile"], "r") as f:
+                    options["keys"] = f.readlines()
+            except FileNotFoundError as e:
+                print(e)
+                sys.exit(3)
+            except:
+                if args.key is None and args.keyfile is None:
+                    print(f"Error: either -key or -keyfile have to be provided.")
+                    sys.exit(1)
+                else:
+                    print(f"Invalid keyfile {args.keyfile}.")
+                    sys.exit(5)
+
+
         options["email"] = args.email
         if options["email"] is not None:
             email_valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', options["email"])
@@ -145,28 +156,42 @@ Please look there on how to use the resulting yaml file.
                 print("Exiting now.")
                 exit(1)
 
-        try:
-            options["expires"] = dt.datetime.strptime(args.expires, "%Y-%m-%d").timestamp()
-        except ValueError as e:
-            print(
-                f"{e}.Please provide date in the right format or remove the --expires option for an expiring date 2 years from now."
-            )
-            sys.exit(2)
-        except (AttributeError, TypeError):
+        options["expires"] = args.expires
+        if options["expires"] is not None:
+            try:
+                options["expires"] = dt.datetime.strptime(options["expires"], "%Y-%m-%d").timestamp()
+            except ValueError as e:
+                print(
+                    f"{e}.Please provide date in the right format or remove the --expires option for an expiring date 2 years from now."
+                )
+                sys.exit(2)
+            # except (AttributeError, TypeError):
+            #     enddate = dt.datetime.now() + relativedelta(years=2)
+            #     options["expires"] = enddate.timestamp()
+        else:
             enddate = dt.datetime.now() + relativedelta(years=2)
             options["expires"] = enddate.timestamp()
+
         options["expires"] = f"{int(options['expires'])}"
 
-        if int(options["uid"]) > 60000:
-            yaml_str = const.USER_EXTERNAL_PROTO
-        else:
+
+
+        if options["internal"]:
             yaml_str = const.USERS_INTERNAL_PROTO
+        else:
+            yaml_str = const.USER_EXTERNAL_PROTO
+
+        if options["uid"] is not None:
+            # we want ot set the uid manually (not needed after user transfer from the old server anymore
+            # therefore not done in a non error prone fashion
+            # uncomment the uid setting
+            yaml_str.replace("# uid:", "uid:")
 
         yaml_str = replace_yaml_str(yaml_str, options)
 
         proto_yaml = yaml.safe_load(yaml_str)
         # now add potential additional keys
-        if len(options["keys"]) > 1:
+        if "keys" in options and len(options["keys"]) > 1:
             for k_no, key in enumerate(options["keys"]):
                 if k_no == 0:
                     continue    # done already
@@ -241,7 +266,9 @@ def replace_yaml_str(yaml_str, options):
         yaml_str = yaml_str.replace("PROTO_EMAIL", options["email"])
     else:
         yaml_str = yaml_str.replace("PROTO_EMAIL", options["username"])
-    yaml_str = yaml_str.replace("PROTO_UID", options["uid"])
+    if options["uid"] is not None:
+        yaml_str = yaml_str.replace("PROTO_UID", options["uid"])
+
     yaml_str = yaml_str.replace("PROTO_EXPIRES", options["expires"])
 
     if options["key"] is not None:
