@@ -56,7 +56,7 @@ USERS_INTERNAL_PROTO = """---
         groups: sudo,admin,aerocom,aerocomftp,users
         shell: /usr/bin/bash
         create_home: yes
-        home: /home_ext/PROTO_USER
+        home: /home/PROTO_USER
         umask: "0002"
     - name: add_key PROTO_USER
       ansible.posix.authorized_key:
