@@ -36,11 +36,14 @@ def main():
         prog="aumn_manage_user",
         description="aerocom-users.met.no user management script.",
         epilog=f"""{colors['BOLD']}Example usages:{colors['END']}\n
-{colors['UNDERLINE']}- print resulting yaml file to stdout:{colors['END']}
-aumn_manage_user adduser jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
+{colors['UNDERLINE']}- add external user griesfel@met.no; print resulting yaml file to stdout:{colors['END']}
+aumn_manage_user adduser griesfel@met.no Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub
 
-{colors['UNDERLINE']}- create yaml file:{colors['END']}
-aumn_manage_user adduser jang 1000 Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub -outfile jang.yaml
+{colors['UNDERLINE']}- add external user griesfel@met.no; create yaml file:{colors['END']}
+aumn_manage_user adduser griesfel@met.no Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub -outfile jang.yaml
+
+{colors['UNDERLINE']}- add internal user griesfel; print yaml file:{colors['END']}
+aumn_manage_user adduser griesfel Jan Griesfeller -i -email griesfel@met.no -keyfile ~/.ssh/id_rsa.pub 
 
 IMPORTANT: THIS SCRIPT WILL ONLY CREATE A yaml FILE to be used together with the 
 fou-kl ostack setup gitlab repository here: 
