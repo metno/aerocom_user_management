@@ -16,7 +16,7 @@ The actual user creation is done using ansible and the
 [ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository 
 (on gitlab.met.no; only accessible from within the Met Norway network) .
 
-Accounts created have a standard expiry time 2 years from the time of creation of the `.yaml` file.
+Accounts created have a standard expiry time of 2 years from the time of creation of the `.yaml` file.
 
 **Note:**
 Expiry dates can be set using the standard `chage` command.
