@@ -9,21 +9,21 @@ write access to the ostack2 API and a working ansible installation.**
 The command line tool `aumn_manage_user` (**aum** from **a**erocom-**u**sers.**m**et.**n**o) is 
 provided to generate 
 `.yaml` files to be used with ansible to create users and to add additional keys to their 
-`~/.ssh/suthorized_keys` file.
+`~/.ssh/authorized_keys` file.
 For user creation the subcommand `adduser` is provided, for key adding the subcommand `addkey`.
 
 The actual user creation is done using ansible and the 
 [ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository 
 (on gitlab.met.no; only accessible from within the Met Norway network) .
 
-Accounts created have a standard expiry time of 2 years from the time of creation of the `.yaml` file.
+All accounts created have a standard expiry time of 2 years from the time of creation of the `.yaml` file.
 
 **Note:**
-Expiry dates can be set using the standard `chage` command.
+Expiry dates can be set using the standard `chage` command (from internal account only).
 
 ## Usage
 This repo provides the command line tool `aumn_manage_user`.
-```bash
+```
 usage: aumn_manage_user [-h] {adduser,addkey} ...
 
 aerocom-users.met.no user management script.
@@ -71,7 +71,7 @@ options:
   -h, --help          show this help message and exit
   -d, --dryrun        dryrun; print yaml file to stdout.
   -keyfile KEYFILE    keyfile to add to yaml file (all keys).
-  -key KEY [KEY ...]  key to add to yaml file. QUOTE CORRECTLY! or use keyfile option.
+  -key KEY [KEY ...]  key to add to yaml file. 1 or 3 elements depending on quotation.
 ```
 
 ### Examplles
