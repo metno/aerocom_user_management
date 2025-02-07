@@ -270,6 +270,8 @@ Please look there on how to use the resulting yaml file.
         else:
             with open(options["file"], "w") as f:
                 f.write(yaml.dump(yaml_dict))
+            print(f"wrote file {options['file']}.")
+            print(f"In a perfect world you can run 'ansible-playbook {options['file']}' now.")
     else:
         print(f"Unknown subcommand {sys.argv[1]}. Only 'adduser' and 'addkey' are supported.")
 
