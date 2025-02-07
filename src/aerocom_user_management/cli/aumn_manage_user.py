@@ -1,12 +1,12 @@
 import argparse
-import sys
-import re
+import datetime as dt
 import os
+import re
+import sys
+from pathlib import Path
 
 import yaml
 from aerocom_user_management import const
-import datetime as dt
-from pathlib import Path
 from dateutil.relativedelta import relativedelta
 
 
@@ -26,9 +26,9 @@ def main():
     }
     # set default output path
     try:
-        default_output_path=os.environ["OSTACK_SETUP_FOU_KL_PATH"]
+        default_output_path = os.environ["OSTACK_SETUP_FOU_KL_PATH"]
     except KeyError:
-        default_output_path=None
+        default_output_path = None
     # Create the parser
     # main_parser = argparse.ArgumentParser(add_help=False)
     parser = argparse.ArgumentParser(
@@ -57,11 +57,12 @@ Please look there on how to use the resulting yaml file.
     parser_addkey = subparsers.add_parser('addkey', help='addkey help')
 
     # add arguments for addkey
-    parser_addkey.add_argument("infile",type=str, help="inputfile to add a new public key to.")
-    parser_addkey.add_argument("-outfile",type=str, help="outputfile. Defaults to stdout.")
-    parser_addkey.add_argument("-keyfile",type=str, help="keyfile to add to input yaml file.")
-    parser_addkey.add_argument("-key",type=str, help="key to add to input yaml file.QUOTE CORRECTLY! or use keyfile option.")
-
+    parser_addkey.add_argument("file", type=str, help="yaml file to add a new public key to.")
+    parser_addkey.add_argument("-d", "--dryrun", action="store_true", help="dryrun; print yaml file to stdout.")
+    parser_addkey.add_argument("-keyfile", type=Path, help="keyfile to add to yaml file (all keys).")
+    parser_addkey.add_argument("-key", type=str,
+                               help="key to add to yaml file. 1 or 3 elements depending on quotation.",
+                               nargs="+", )
 
     # Add arguments adduser
     parser_adduser.add_argument(
@@ -81,7 +82,7 @@ Please look there on how to use the resulting yaml file.
         nargs="+",
     )
     parser_adduser.add_argument(
-        "-key", type=str, help="ssh key to use. QUOTE CORRECTLY! or use keyfile option",
+        "-key", type=str, help="ssh key to use. 1 or 3 elements depending on quotation",
         nargs="+",
     )
     parser_adduser.add_argument("-keyfile", type=Path, help="keyfile to use. one key per line.")
@@ -124,7 +125,13 @@ Please look there on how to use the resulting yaml file.
 
         # not properly quoted the key argument can be a list
         try:
-            options["key"] = " ".join(args.key)
+            if len(args.key) == 1 or len(args.key) == 3:
+                options["key"] = " ".join(args.key)
+            else:
+                print(f"Error: a key argument has to be either 1 or 3 elements long! Quoting problem? Exiting...")
+                sys.exit(1)
+        except SystemExit:
+            raise (SystemExit)
         except:
             options["key"] = args.key
         options["outfile"] = args.outfile
@@ -146,7 +153,6 @@ Please look there on how to use the resulting yaml file.
                     print(f"Invalid keyfile {args.keyfile}.")
                     sys.exit(5)
 
-
         options["email"] = args.email
         if options["email"] is not None:
             email_valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', options["email"])
@@ -158,7 +164,8 @@ Please look there on how to use the resulting yaml file.
             email_valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', options["username"])
             if not email_valid:
                 print(f"Error: No -email option given and user name {options['username']} is not an email address.")
-                print("Please use a valid email address as username or provide an email address using the -email option.")
+                print(
+                    "Please use a valid email address as username or provide an email address using the -email option.")
                 print("Exiting now.")
                 exit(1)
 
@@ -180,8 +187,6 @@ Please look there on how to use the resulting yaml file.
 
         options["expires"] = f"{int(options['expires'])}"
 
-
-
         if options["internal"]:
             yaml_str = const.USERS_INTERNAL_PROTO
         else:
@@ -200,7 +205,7 @@ Please look there on how to use the resulting yaml file.
         if "keys" in options and len(options["keys"]) > 1:
             for k_no, key in enumerate(options["keys"]):
                 if k_no == 0:
-                    continue    # done already
+                    continue  # done already
                 else:
                     yaml_str = replace_key_yaml_str(const.KEY_PROTO, options["username"], key)
                     yaml_tmp = yaml.safe_load(yaml_str)
@@ -217,43 +222,67 @@ Please look there on how to use the resulting yaml file.
     elif sys.argv[1] == "addkey":
         # add key to yaml file
 
-        options["infile"] = args.infile
-        options["outfile"] = args.outfile
-
-        try:
-            options["keyfile"] = Path(args.keyfile)
-            options["keys"] = []
-            with open(options["keyfile"], "r") as f:
-                options["keys"].append(f.read().strip())
-        except FileNotFoundError as e:
-            print(e)
-            sys.exit(3)
-        except:
-            print(f"Invalid keyfile {args.keyfile}.")
-            sys.exit(5)
+        options["file"] = args.file
+        options["dryrun"] = args.dryrun
 
         options["key"] = args.key
+        options["keyfile"] = args.keyfile
+        try:
+            if len(args.key) == 1 or len(args.key) == 3:
+                options["key"] = " ".join(args.key)
+            else:
+                print(f"Error: a key argument has to be either 1 or 3 elements long! Quoting problem? Exiting...")
+                sys.exit(1)
+        except SystemExit:
+            raise (SystemExit)
+        except:
+            options["key"] = args.key
 
-        # logical checks
-        # eiter options['keyfile'] or options['key'] need to exist
-        if args.key is None and not "keyfile" in options:
+        if options["key"] is None and options["keyfile"] is None:
             print(f"Error: either -key or -keyfile have to be provided.")
             sys.exit(1)
 
+        if options["keyfile"] is not None:
+            try:
+                options["keys"] = []
+                with open(options["keyfile"], "r") as f:
+                    options["keys"] = f.readlines()
+            except FileNotFoundError as e:
+                print(e)
+                sys.exit(3)
+            except:
+                print(f"Invalid keyfile {args.keyfile}.")
+                sys.exit(5)
+
         # read input yaml file
-        with open(options["infile"], "r") as f:
+        with open(options["file"], "r") as f:
             yaml_dict = yaml.safe_load(f)
 
-        # prepare con
-        for idx in yaml_dict:
-            yaml_dict[idx]["tasks"].append(options["key"])
-        assert("inpyt yaml read")
+        t_idx, username = get_user_from_yaml(yaml_dict)
 
-        yaml_key_str = yaml.safe_load(const.KEY_PROTO)
+        # prepare yaml for addional key
+        key_yaml_str = replace_key_yaml_str(const.KEY_PROTO, username, options["key"])
+        key_yaml_tmp = yaml.safe_load(key_yaml_str)
 
-        pass
+        yaml_dict[t_idx]["tasks"].append(key_yaml_tmp[0])
+        if options["dryrun"]:
+            print(yaml.dump(yaml_dict))
+        else:
+            with open(options["file"], "w") as f:
+                f.write(yaml.dump(yaml_dict))
     else:
         print(f"Unknown subcommand {sys.argv[1]}. Only 'adduser' and 'addkey' are supported.")
+
+def get_user_from_yaml(yaml_str):
+    '''read first user name from given yaml string
+    (first ocurrance of 'ansible.builtin.user')'''
+    for t_idx, task in enumerate(yaml_str):
+        for task_no, subtask in enumerate(task["tasks"]):
+            if 'ansible.builtin.user' in task['tasks'][task_no]:
+                username = task['tasks'][task_no]['ansible.builtin.user']['user']
+                # to be dure to add the key to the same task index we also return t_idx
+                return t_idx, username
+
 
 def replace_key_yaml_str(yaml_str, username, key):
     """small helper method to replace key yaml string"""
@@ -291,6 +320,7 @@ def replace_yaml_str(yaml_str, options):
 
         # yaml_str = yaml_str.replace("", options[""])
     return yaml_str
+
 
 if __name__ == "__main__":
     main()
