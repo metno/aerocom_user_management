@@ -38,39 +38,63 @@ options:
 
 ```
 There's two sub commands:
-- `adduser` (to add new users)
-- `addkey` (to add another public key to an existing user)
+- `adduser`, to add new users
+- `addkey`, to add another public key to an existing user
 
 ### aumn_manage_user adduser
 ```
-usage: aumn_manage_user adduser [-h] [-key KEY] [-keyfile KEYFILE] [-outfile OUTFILE] [-email EMAIL] [-expires EXPIRES] username uid name [name ...]
+usage: aumn_manage_user adduser [-h] [-uid UID] [-key KEY [KEY ...]] [-keyfile KEYFILE] [-outfile OUTFILE] [-email EMAIL] [-expires EXPIRES] [-i] username name [name ...]
 
 positional arguments:
-  username          UNIX user name to use
-  uid               user id (uid) to use
-  name              The name of the user (first name, last name). Names will be concatenated.
+  username            UNIX user name to use
+  name                The name of the user (first name, last name). Names will be concatenated.
 
 options:
-  -h, --help        show this help message and exit
-  -key KEY          ssh key to use. QUOTE CORRECTLY! or use keyfile option
-  -keyfile KEYFILE  keyfile to use. one key per line.
-  -outfile OUTFILE  outputfile. Defaults to stdout.
-  -email EMAIL      email address. Only needed if username is not an email address.
-  -expires EXPIRES  user name's expiring date as YYYY-MM-DD. Defaults to today + 2 years.
+  -h, --help          show this help message and exit
+  -uid UID            user id (uid) to use
+  -key KEY [KEY ...]  ssh key to use. 1 or 3 elements depending on quotation.
+  -keyfile KEYFILE    keyfile to use. one key per line.
+  -outfile OUTFILE    outputfile. Defaults to stdout.
+  -email EMAIL        email address. Only needed if username is not an email address.
+  -expires EXPIRES    user name's expiring date as YYYY-MM-DD. Defaults to today + 2 years.
+  -i, --internal      create an internal user (will get sudo rights).
 ```
 
 ### aumn_manage_user addkey
 ```
-usage: aumn_manage_user addkey [-h]
+usage: aumn_manage_user addkey [-h] [-d] [-keyfile KEYFILE] [-key KEY [KEY ...]] file
+
+positional arguments:
+  file                yaml file to add a new public key to.
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help          show this help message and exit
+  -d, --dryrun        dryrun; print yaml file to stdout.
+  -keyfile KEYFILE    keyfile to add to yaml file (all keys).
+  -key KEY [KEY ...]  key to add to yaml file. QUOTE CORRECTLY! or use keyfile option.
 ```
 
-### output files
-To make things easier, the environment variable `OSTACK_SETUP_FOU_KL_PATH` can be set to 
-tell where the [ostack-setup-fou-kl](https://gitlab.met.no/emep/ostack-setup-fou-kl) repository 
-is located on the user's file system. If that environment variable is set, the output files will be 
-put at the right place within the ostack-setup-fou-kl repo 
-(at `aerocom/files/aerocom-users_users/external` for external users and 
-`aerocom/files/aerocom-users_users/internal` for internal users)
+### Examplles
+#### add external user griesfel@met.no; print resulting yaml file to stdout
+`aumn_manage_user adduser griesfel@met.no Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub`
+
+`aumn_manage_user adduser griesfel@met.no Jan Griesfeller -key '<key>'`
+
+#### add external user griesfel@met.no; create yaml file
+`aumn_manage_user adduser griesfel@met.no Jan Griesfeller -keyfile ~/.ssh/id_rsa.pub -outfile jang.yaml`
+
+`aumn_manage_user adduser griesfel@met.no Jan Griesfeller -key '<key>' -outfile jang.yaml`
+
+#### add internal user griesfel; print yaml file:
+
+`aumn_manage_user adduser griesfel Jan Griesfeller -i -email griesfel@met.no -keyfile ~/.ssh/id_rsa.pub`
+
+`aumn_manage_user adduser griesfel Jan Griesfeller -i -email griesfel@met.no -key '<key>'` 
+
+#### add public key to existing yaml file; print resulting file to stdout 
+
+`aumn_manage_user addkey <file>.yaml --dryrun -key '<key>'`
+
+#### add public key to existing yaml file; modify the input file
+
+`aumn_manage_user addkey <file>.yaml -key '<key>'`
