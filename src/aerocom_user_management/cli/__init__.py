@@ -1,1 +1,0 @@
-from .aumn_manage_user import main
