@@ -196,7 +196,7 @@ Please look there on how to use the resulting yaml file.
             # we want ot set the uid manually (not needed after user transfer from the old server anymore
             # therefore not done in a non error prone fashion
             # uncomment the uid setting
-            yaml_str.replace("# uid:", "uid:")
+            yaml_str = yaml_str.replace("# uid:", "uid:")
 
         yaml_str = replace_yaml_str(yaml_str, options)
 
