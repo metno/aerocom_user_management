@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aerocom_user_management"
-version = "0.2.5"
+version = "0.2.6"
 description = "small project for ansible based user management of aerocom-users.met.no"
 authors = [
     { name = "Jan Griesfeller", email = "jan.griesfeller@met.no" }
@@ -25,7 +25,7 @@ aumn_manage_user = "aerocom_user_management.cli.aumn_manage_user:main"
 #aumn_import_users = "aerocom_user_management.cli.aumn_import_users:main"
 
 [tool.setuptools]
-packages = ["aerocom_user_management"]
+packages = ["aerocom_user_management", "aerocom_user_management.cli"]
 package-dir = {"" = "src"}
 
 #[tool.setuptools.packages.find]
