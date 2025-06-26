@@ -22,7 +22,7 @@ All accounts created have a standard expiry time of 2 years from the time of cre
 Expiry dates can be set using the standard `chage` command (from internal account only).
 
 ## Installation
-Run the following command from with in your ostack Python environment:
+Run the following command from within your ostack Python environment:
 
 ```bash
 python -m pip install 'git+https://github.com/metno/aerocom_user_management.git'
