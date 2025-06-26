@@ -61,8 +61,8 @@ Please look there on how to use the resulting yaml file.
     parser_addkey.add_argument("-d", "--dryrun", action="store_true", help="dryrun; print yaml file to stdout.")
     parser_addkey.add_argument("-keyfile", type=Path, help="keyfile to add to yaml file (all keys).")
     parser_addkey.add_argument("-key", type=str,
-                               help="key to add to yaml file. 1 or 3 elements depending on quotation.",
-                               nargs="+", )
+                               help="key to add to yaml file. 1 element! correct quoting is needed.",
+                               nargs=1, )
 
     # Add arguments adduser
     parser_adduser.add_argument(
@@ -246,13 +246,18 @@ Please look there on how to use the resulting yaml file.
             try:
                 options["keys"] = []
                 with open(options["keyfile"], "r") as f:
-                    options["keys"] = f.readlines()
+                    tmp_keys = f.readlines()
+                    options["key"] = tmp_keys[0]
+                    if len(tmp_keys) > 1:
+                        print("Warning: multiple keys provided in key file, but only the first one was used.")
+
             except FileNotFoundError as e:
                 print(e)
                 sys.exit(3)
             except:
                 print(f"Invalid keyfile {args.keyfile}.")
                 sys.exit(5)
+
 
         # read input yaml file
         with open(options["file"], "r") as f:

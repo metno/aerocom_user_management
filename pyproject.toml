@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aerocom_user_management"
-version = "0.2.6"
+version = "0.2.7"
 description = "small project for ansible based user management of aerocom-users.met.no"
 authors = [
     { name = "Jan Griesfeller", email = "jan.griesfeller@met.no" }
