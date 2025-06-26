@@ -82,8 +82,7 @@ Please look there on how to use the resulting yaml file.
         nargs="+",
     )
     parser_adduser.add_argument(
-        "-key", type=str, help="ssh key to use. 1 or 3 elements depending on quotation",
-        nargs="+",
+        "-key", type=str, help="ssh key to use. Single argument.",
     )
     parser_adduser.add_argument("-keyfile", type=Path, help="keyfile to use. one key per line.")
     parser_adduser.add_argument("-outfile", type=Path, help="outputfile. Defaults to stdout.");

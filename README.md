@@ -43,7 +43,7 @@ There's two sub commands:
 
 ### aumn_manage_user adduser
 ```
-usage: aumn_manage_user adduser [-h] [-uid UID] [-key KEY [KEY ...]] [-keyfile KEYFILE] [-outfile OUTFILE] [-email EMAIL] [-expires EXPIRES] [-i] username name [name ...]
+usage: aumn_manage_user adduser [-h] [-uid UID] [-key KEY] [-keyfile KEYFILE] [-outfile OUTFILE] [-email EMAIL] [-expires EXPIRES] [-i] username name [name ...]
 
 positional arguments:
   username            UNIX user name to use
@@ -52,7 +52,7 @@ positional arguments:
 options:
   -h, --help          show this help message and exit
   -uid UID            user id (uid) to use
-  -key KEY [KEY ...]  ssh key to use. 1 or 3 elements depending on quotation.
+  -key KEY            ssh key to use. Single argument.
   -keyfile KEYFILE    keyfile to use. one key per line.
   -outfile OUTFILE    outputfile. Defaults to stdout.
   -email EMAIL        email address. Only needed if username is not an email address.
@@ -62,7 +62,7 @@ options:
 
 ### aumn_manage_user addkey
 ```
-usage: aumn_manage_user addkey [-h] [-d] [-keyfile KEYFILE] [-key KEY [KEY ...]] file
+usage: aumn_manage_user addkey [-h] [-d] [-keyfile KEYFILE] [-key KEY] file
 
 positional arguments:
   file                yaml file to add a new public key to.
@@ -71,7 +71,7 @@ options:
   -h, --help          show this help message and exit
   -d, --dryrun        dryrun; print yaml file to stdout.
   -keyfile KEYFILE    keyfile to add to yaml file (all keys).
-  -key KEY [KEY ...]  key to add to yaml file. 1 or 3 elements depending on quotation.
+  -key KEY            key to add to yaml file. 1 element! correct quoting is needed.
 ```
 
 ### Examplles
